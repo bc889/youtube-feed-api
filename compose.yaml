@@ -1,0 +1,44 @@
+version: '3'
+services:
+  youtube-feed-api:
+    env_file:
+      - .env
+    container_name: youtube-feed-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: youtube-feed-api:latest
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      - ngrok
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: ${POSTGRES_URL}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+
+  db:
+    image: 'postgres:13.1-alpine'
+    container_name: db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_HOST_MACHINE_PORTS}"
+
+  ngrok:
+    env_file:
+      - .env
+    image: ngrok/ngrok:alpine
+    environment:
+        NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+        NGROK_DOMAIN: ${NGROK_DOMAIN}
+    ports:
+      - "4040:4040"  # Ngrok web interface. Access via http://localhost:4040
+    command: http --hostname=${NGROK_DOMAIN} youtube-feed-api:${SERVER_PORT}

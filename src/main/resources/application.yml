@@ -1,0 +1,33 @@
+notification:
+  uri: ${NOTIFICATION_URI}
+  token: ${NOTIFICATION_TOKEN}
+  user: ${NOTIFICATION_USER}
+ngrok:
+  baseUrl: ${NGROK_BASE_URL}
+okta:
+  oauth2:
+    issuer: ${OAUTH2_ISSUER}
+    audience: ${OAUTH2_AUDIENCE}
+    groupsClaim: ${OAUTH2_GROUPS_CLAIM}
+
+server:
+  port: ${SERVER_PORT}
+  error:
+    whitelabel:
+      enabled: false
+
+application:
+  client-origin-url: ${APPLICATION_CLIENT_ORIGIN_URL}
+  disable-scheduler: ${APPLICATION_DISABLE_SCHEDULER}
+  disable-auth: ${APPLICATION_DISABLE_AUTH}
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
+  jpa:
+    defer-datasource-initialization: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
