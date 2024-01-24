@@ -11,6 +11,5 @@ public class ApplicationProperties {
 
     String clientOriginUrl;
     boolean disableScheduler;
-    boolean disableAuth;
 }
 

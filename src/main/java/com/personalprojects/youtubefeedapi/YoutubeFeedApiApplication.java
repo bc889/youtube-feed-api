@@ -19,43 +19,13 @@ public class YoutubeFeedApiApplication {
 
 	enum AppEnv {
 		SERVER_PORT,
-		APPLICATION_CLIENT_ORIGIN_URL,
 		NGROK_BASE_URL,
-	}
-
-	enum AuthEnv {
-		// Can conditionally disable auth0 for ease of demonstration.
-		// Note: this project is not intended for use in production environments.
-		APPLICATION_DISABLE_AUTH,
-		OAUTH2_ISSUER,
-		OAUTH2_AUDIENCE,
-		OAUTH2_GROUPS_CLAIM,
 	}
 
 	public static void main(final String[] args) {
 		dotEnvSafeCheck();
-		authEnvSafeCheck();
 
 		SpringApplication.run(YoutubeFeedApiApplication.class, args);
-	}
-
-	private static void authEnvSafeCheck() {
-		final var dotenv = Dotenv.configure()
-				.ignoreIfMissing()
-				.load();
-
-		var disableAuth = Boolean.parseBoolean(dotenv.get(AuthEnv.APPLICATION_DISABLE_AUTH.name(), ""));
-
-		if (!disableAuth) {
-			stream(AuthEnv.values())
-				.map(AuthEnv::name)
-				.filter(varName -> dotenv.get(varName, "").isEmpty())
-				.findFirst()
-				.ifPresent(varName -> {
-					logger.error("[Fatal] Cannot enable Auth0, missing or empty environment variable: {}", varName);
-					System.exit(1);
-				});
-		}
 	}
 
 	private static void dotEnvSafeCheck() {

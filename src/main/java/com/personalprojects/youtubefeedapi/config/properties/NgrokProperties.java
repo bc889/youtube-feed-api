@@ -8,5 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @RequiredArgsConstructor
 @ConfigurationProperties(prefix = "ngrok")
 public class NgrokProperties {
+
     String baseUrl;
 }

@@ -1,9 +1,9 @@
 package com.personalprojects.youtubefeedapi.config.security;
 
-import com.personalprojects.youtubefeedapi.config.properties.ApplicationProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,18 +20,21 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 public class SecurityConfig {
 
     private final AuthenticationErrorHandler authenticationErrorHandler;
-    private final ApplicationProperties applicationProperties;
 
     @Bean
+    @Profile("!auth")
+    public SecurityFilterChain httpSecurityNoAuth(final HttpSecurity http) throws Exception {
+        // Note: this project is not intended for use in production environments.
+        return http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().permitAll())
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
+                .oauth2ResourceServer(AbstractHttpConfigurer::disable)
+                .build();
+    }
+
+    @Bean
+    @Profile("auth")
     public SecurityFilterChain httpSecurity(final HttpSecurity http) throws Exception {
-        if (applicationProperties.isDisableAuth()) {
-            // Note: this project is not intended for use in production environments.
-            return http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().permitAll())
-                    .csrf(AbstractHttpConfigurer::disable)
-                    .cors(AbstractHttpConfigurer::disable)
-                    .oauth2ResourceServer(AbstractHttpConfigurer::disable)
-                    .build();
-        }
         return http
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         // Endpoints the pubsub server & docs will use need to remain available.

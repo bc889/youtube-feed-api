@@ -8,6 +8,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Optional;
+
 /**
  * Adds our Client Origin Url to our CORS policy.
  */
@@ -19,8 +21,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(applicationProps.getClientOriginUrl())
+        var mapping = registry.addMapping("/**")
                 .allowedHeaders(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "ngrok-skip-browser-warning")
                 .allowedMethods(
                         HttpMethod.GET.name(),
@@ -29,5 +30,9 @@ public class ApplicationConfig implements WebMvcConfigurer {
                         HttpMethod.PATCH.name()
                 )
                 .maxAge(86400);
+
+        Optional.of(applicationProps.getClientOriginUrl())
+                .filter(String::isBlank)
+                .ifPresent(mapping::allowedOrigins);
     }
 }
