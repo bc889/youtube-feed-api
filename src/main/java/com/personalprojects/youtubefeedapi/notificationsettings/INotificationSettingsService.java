@@ -1,4 +1,4 @@
-package com.personalprojects.youtubefeedapi.notification;
+package com.personalprojects.youtubefeedapi.notificationsettings;
 
 public interface INotificationSettingsService {
 

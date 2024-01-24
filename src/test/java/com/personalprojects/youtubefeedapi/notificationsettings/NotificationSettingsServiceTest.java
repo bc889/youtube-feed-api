@@ -1,4 +1,4 @@
-package com.personalprojects.youtubefeedapi.notification;
+package com.personalprojects.youtubefeedapi.notificationsettings;
 
 import com.personalprojects.youtubefeedapi.user.IUserRepository;
 import com.personalprojects.youtubefeedapi.user.User;

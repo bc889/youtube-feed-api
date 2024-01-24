@@ -1,7 +1,7 @@
 package com.personalprojects.youtubefeedapi.user;
 
 import com.personalprojects.youtubefeedapi.feed.FeedEntry;
-import com.personalprojects.youtubefeedapi.notification.NotificationSettings;
+import com.personalprojects.youtubefeedapi.notificationsettings.NotificationSettings;
 import com.personalprojects.youtubefeedapi.subscription.Subscription;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

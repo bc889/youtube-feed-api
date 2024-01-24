@@ -9,7 +9,7 @@ import com.personalprojects.youtubefeedapi.error.enums.UnauthorizedErrorCode;
 import com.personalprojects.youtubefeedapi.feed.FeedEntry;
 import com.personalprojects.youtubefeedapi.feed.IFeedEntryMapper;
 import com.personalprojects.youtubefeedapi.feed.IFeedEntryRepository;
-import com.personalprojects.youtubefeedapi.notification.INotificationSettingsRepository;
+import com.personalprojects.youtubefeedapi.notificationsettings.INotificationSettingsRepository;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.Author;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomEntry;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomFeed;

@@ -1,4 +1,4 @@
-package com.personalprojects.youtubefeedapi.notification;
+package com.personalprojects.youtubefeedapi.notificationsettings;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

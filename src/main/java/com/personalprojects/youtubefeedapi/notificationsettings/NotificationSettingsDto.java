@@ -1,4 +1,4 @@
-package com.personalprojects.youtubefeedapi.notification;
+package com.personalprojects.youtubefeedapi.notificationsettings;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
