@@ -29,8 +29,8 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class PushFeedService implements IPushFeedService {
-    private static final Logger logger = LoggerFactory.getLogger(PushFeedService.class);
+public class CallbackService implements ICallbackService {
+    private static final Logger logger = LoggerFactory.getLogger(CallbackService.class);
 
     private final IPushoverService pushoverService;
 

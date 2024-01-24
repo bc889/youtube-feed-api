@@ -3,7 +3,7 @@ package com.personalprojects.youtubefeedapi.pubsubhubbub.services;
 /**
  * Service for managing the callback endpoints that will be used by the Pubsubhubbub server
  */
-public interface IPushFeedService {
+public interface ICallbackService {
     String verifyCallback(
             String userId,
             Long subscriptionId,

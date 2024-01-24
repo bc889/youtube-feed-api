@@ -1,6 +1,6 @@
 package com.personalprojects.youtubefeedapi.pubsubhubbub;
 
-import com.personalprojects.youtubefeedapi.pubsubhubbub.services.IPushFeedService;
+import com.personalprojects.youtubefeedapi.pubsubhubbub.services.ICallbackService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/users/{userId}/subscriptions/{subscriptionId}/push")
 @RequiredArgsConstructor
-public class PushController {
+public class CallbackController {
 
-    private final IPushFeedService pushFeedService;
+    private final ICallbackService callbackService;
 
     @GetMapping
-    public ResponseEntity<String> verifyPushCallback(
+    public ResponseEntity<String> verifyCallback(
             @PathVariable String userId,
             @PathVariable Long subscriptionId,
             @RequestParam("hub.mode") String mode,
@@ -23,7 +23,7 @@ public class PushController {
             @RequestParam("hub.verify_token") String verifyToken,
             @RequestParam(value = "hub.lease_seconds", required = false) String leaseSeconds
     ) {
-        return ResponseEntity.ok().body(pushFeedService.verifyCallback(
+        return ResponseEntity.ok().body(callbackService.verifyCallback(
                 userId,
                 subscriptionId,
                 mode,
@@ -35,12 +35,12 @@ public class PushController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> handlePushCallback(
+    public ResponseEntity<Void> handleCallback(
             @PathVariable String userId,
             @PathVariable Long subscriptionId,
             @RequestBody String payload
     ) {
-        pushFeedService.createFeedEntry(userId, subscriptionId, payload);
+        callbackService.createFeedEntry(userId, subscriptionId, payload);
         return ResponseEntity.ok().build();
     }
 }
