@@ -5,10 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Value
 @RequiredArgsConstructor
-@ConfigurationProperties(prefix = "notification")
-public class NotificationProperties {
+@ConfigurationProperties(prefix = "pushover")
+public class PushoverProperties {
 
     String uri;
-    String token;
-    String user;
 }

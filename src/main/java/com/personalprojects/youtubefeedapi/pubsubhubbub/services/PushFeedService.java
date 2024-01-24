@@ -32,7 +32,7 @@ import java.util.Optional;
 public class PushFeedService implements IPushFeedService {
     private static final Logger logger = LoggerFactory.getLogger(PushFeedService.class);
 
-    private final INotificationService notificationService;
+    private final IPushoverService pushoverService;
 
     private final IVerificationTokenService verificationTokenService;
 
@@ -138,7 +138,7 @@ public class PushFeedService implements IPushFeedService {
                 if (foundSettings.isPresent()) {
                     var settings = foundSettings.get();
                     if (settings.isEnableNotifications()) {
-                        notificationService.sendNotification(
+                        pushoverService.sendNotification(
                                 updatedString + atomEntry.getTitle() + "\n" + atomEntry.getLink().getHref(),
                                 author.getName(),
                                 settings.getPushoverToken(),

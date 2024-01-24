@@ -21,8 +21,6 @@ public class YoutubeFeedApiApplication {
 		SERVER_PORT,
 		APPLICATION_CLIENT_ORIGIN_URL,
 		NGROK_BASE_URL,
-		NGROK_AUTHTOKEN,
-		NGROK_DOMAIN
 	}
 
 	enum AuthEnv {
