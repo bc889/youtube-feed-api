@@ -2,16 +2,18 @@ package com.personalprojects.youtubefeedapi.notificationsettings;
 
 import com.personalprojects.youtubefeedapi.user.IUserRepository;
 import com.personalprojects.youtubefeedapi.user.User;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.openMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class NotificationSettingsServiceTest {
 
     private static final String USER_ID = "user";
@@ -26,17 +28,9 @@ public class NotificationSettingsServiceTest {
     private INotificationSettingsMapper notificationSettingsMapper;
 
 
+    @InjectMocks
     private NotificationSettingsService service;
 
-    @BeforeEach
-    public void setup() {
-        openMocks(this);
-        this.service = new NotificationSettingsService(
-                userRepository,
-                notificationSettingsRepository,
-                notificationSettingsMapper
-        );
-    }
 
     @Test
     void givenEnableNotificationsSetTrue_whenPatch_thenDoNotOverwriteExistingValueWhenNotSetOnRequest() {

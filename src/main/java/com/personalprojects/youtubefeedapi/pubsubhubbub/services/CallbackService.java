@@ -14,9 +14,7 @@ import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.Author;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomEntry;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomFeed;
 import com.personalprojects.youtubefeedapi.subscription.ISubscriptionRepository;
-import com.personalprojects.youtubefeedapi.subscription.Subscription;
 import com.personalprojects.youtubefeedapi.user.IUserRepository;
-import com.personalprojects.youtubefeedapi.user.User;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +52,7 @@ public class CallbackService implements ICallbackService {
 
         String storedToken = verificationTokenService.getVerificationToken();
 
-        if(verifyToken.equals(storedToken)) {
+        if (verifyToken.equals(storedToken)) {
             // Handle the verification request and return the challenge as the response
             logger.info("Mode: " + mode);
             logger.info("Topic: " + topic);
@@ -73,27 +71,13 @@ public class CallbackService implements ICallbackService {
 
         logger.info("Received PuSH notification: " + payload);
 
-        User user;
-        Subscription subscription;
+        var user = userRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException(NotFoundErrorCode.USER_ID_NOT_FOUND));
 
-        Optional<User> foundUser = userRepository.findByUserId(userId);
-
-        if (foundUser.isEmpty()) {
-            throw new NotFoundException(NotFoundErrorCode.USER_ID_NOT_FOUND);
-        }
-        else {
-            user = foundUser.get();
-        }
-
-        Optional<Subscription> foundSubscription = subscriptionRepository
-                .findByUserIdAndSubscriptionId(userId, subscriptionId);
-
-        if (foundSubscription.isEmpty()) {
-            throw new NotFoundException(NotFoundErrorCode.SUBSCRIPTION_ID_NOT_FOUND);
-        }
-        else {
-            subscription = foundSubscription.get();
-        }
+        var subscription = subscriptionRepository
+                .findByUserIdAndSubscriptionId(userId, subscriptionId)
+                .orElseThrow(() -> new NotFoundException(NotFoundErrorCode.SUBSCRIPTION_ID_NOT_FOUND));
 
         try {
             YTAtomFeed atomFeed = atomFeedService.toAtomFeed(payload);
@@ -133,11 +117,9 @@ public class CallbackService implements ICallbackService {
                 }
 
                 // Attempt to send a notification:
-                var foundSettings = notificationSettingsRepository.findByUserId(userId);
-                var updatedString = prevMostRecentUpdate.isPresent() ? "(Video Updated) " : "";
-                if (foundSettings.isPresent()) {
-                    var settings = foundSettings.get();
+                notificationSettingsRepository.findByUserId(userId).ifPresent(settings -> {
                     if (settings.isEnableNotifications()) {
+                        var updatedString = prevMostRecentUpdate.isPresent() ? "(Video Updated) " : "";
                         pushoverService.sendNotification(
                                 updatedString + atomEntry.getTitle() + "\n" + atomEntry.getLink().getHref(),
                                 author.getName(),
@@ -145,12 +127,12 @@ public class CallbackService implements ICallbackService {
                                 settings.getPushoverUser()
                         );
                     }
-                }
+                });
             }
         } catch (JAXBException e) {
-            logger.error("JAXB Exception " + e);
+            throw new BadRequestException(BadRequestErrorCode.FEED_PARSING_ERROR);
         } catch (DatatypeConfigurationException e) {
-            logger.error("XMLGregorianCalendar Exception " + e);
+            throw new BadRequestException(BadRequestErrorCode.DATE_PARSING_ERROR);
         }
     }
 }

@@ -12,7 +12,15 @@ public enum BadRequestErrorCode implements IErrorCode {
     SUBSCRIPTION_MISMATCH(
             400005,
             "The retrieved subscription's data doesn't match the given notification's."
-    ),;
+    ),
+    FEED_PARSING_ERROR(
+            400006,
+            "Couldn't parse the given atom feed."
+    ),
+    DATE_PARSING_ERROR(
+            400007,
+            "The given date was invalid."
+    );
     private final int code;
     private final String message;
 
