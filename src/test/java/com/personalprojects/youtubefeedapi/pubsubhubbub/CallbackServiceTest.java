@@ -1,6 +1,11 @@
 package com.personalprojects.youtubefeedapi.pubsubhubbub;
 
+import com.personalprojects.youtubefeedapi.error.BadRequestException;
+import com.personalprojects.youtubefeedapi.error.NotFoundException;
 import com.personalprojects.youtubefeedapi.error.UnauthorizedException;
+import com.personalprojects.youtubefeedapi.error.enums.BadRequestErrorCode;
+import com.personalprojects.youtubefeedapi.error.enums.NotFoundErrorCode;
+import com.personalprojects.youtubefeedapi.error.enums.UnauthorizedErrorCode;
 import com.personalprojects.youtubefeedapi.feed.FeedEntry;
 import com.personalprojects.youtubefeedapi.feed.IFeedEntryMapper;
 import com.personalprojects.youtubefeedapi.feed.IFeedEntryRepository;
@@ -86,24 +91,6 @@ public class CallbackServiceTest {
         assertEquals(challenge, result);
     }
 
-    @Test
-    public void verifyCallback_InvalidToken_ThrowsUnauthorizedException() {
-        // Arrange
-        String userId = "testUser";
-        Long subscriptionId = 1L;
-        String mode = "subscribe";
-        String topic = "https://example.com";
-        String challenge = "testChallenge";
-        String verifyToken = "invalidToken";
-        String leaseSeconds = "3600";
-
-        when(verificationTokenService.getVerificationToken()).thenReturn("testToken");
-
-        // Act & Assert
-        assertThrows(UnauthorizedException.class, () -> {
-            callbackService.verifyCallback(userId, subscriptionId, mode, topic, challenge, verifyToken, leaseSeconds);
-        });
-    }
 
     @Test
     public void createFeedEntry_ValidPayloadWithNoPriorUploadsAndUserEnabledNotifications_SavesAndSendsNotification()
@@ -143,6 +130,143 @@ public class CallbackServiceTest {
         verify(pushoverService, times(1)).sendNotification(
                 anyString(), anyString(), anyString(), anyString()
         );
+    }
+
+    // Exceptions
+    @Test
+    public void verifyCallback_InvalidToken_ThrowsInvalidTokenRequest() {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String mode = "subscribe";
+        String topic = "https://example.com";
+        String challenge = "testChallenge";
+        String verifyToken = "invalidToken";
+        String leaseSeconds = "3600";
+
+        when(verificationTokenService.getVerificationToken()).thenReturn("testToken");
+
+        // Act & Assert
+        var exception = assertThrows(UnauthorizedException.class, () ->
+                callbackService.verifyCallback(
+                        userId,
+                        subscriptionId,
+                        mode,
+                        topic,
+                        challenge,
+                        verifyToken,
+                        leaseSeconds
+                ));
+        assertEquals(UnauthorizedErrorCode.INVALID_TOKEN_REQUEST, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFeedEntry_InvalidXMLPayload_ThrowsFeedParsingError() throws JAXBException {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String payload = "testPayload";
+        User user = new User();
+        Subscription subscription = new Subscription();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(subscriptionRepository.findByUserIdAndSubscriptionId(userId, subscriptionId))
+                .thenReturn(Optional.of(subscription));
+        when(atomFeedService.toAtomFeed(payload)).thenThrow(JAXBException.class);
+
+
+        // Act & assert
+        var exception = assertThrows(BadRequestException.class, () ->
+                callbackService.createFeedEntry(userId, subscriptionId, payload)
+        );
+        assertEquals(BadRequestErrorCode.FEED_PARSING_ERROR, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFeedEntry_ValidPayloadWhereTopicDoesNotMatchSubscription_ThrowSubscriptionMismatch()
+            throws JAXBException, DatatypeConfigurationException {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String payload = "testPayload";
+        User user = new User();
+        Subscription subscription = new Subscription();
+
+        YTAtomFeed atomFeed = createTestAtomFeed();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(subscriptionRepository.findByUserIdAndSubscriptionId(userId, subscriptionId))
+                .thenReturn(Optional.of(subscription));
+        when(atomFeedService.toAtomFeed(payload)).thenReturn(atomFeed);
+        when(atomFeedService.isValidForSubscription(atomFeed, subscription)).thenReturn(false);
+
+        // Act & assert
+        var exception = assertThrows(BadRequestException.class, () ->
+                callbackService.createFeedEntry(userId, subscriptionId, payload)
+        );
+        assertEquals(BadRequestErrorCode.SUBSCRIPTION_MISMATCH, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFeedEntry_ValidPayloadThatHasInvalidDates_ThrowDateParsingError()
+            throws JAXBException, DatatypeConfigurationException {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String payload = "testPayload";
+        User user = new User();
+        Subscription subscription = new Subscription();
+
+        YTAtomFeed atomFeed = createTestAtomFeed();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(subscriptionRepository.findByUserIdAndSubscriptionId(userId, subscriptionId))
+                .thenReturn(Optional.of(subscription));
+        when(atomFeedService.toAtomFeed(payload)).thenReturn(atomFeed);
+        when(atomFeedService.isValidForSubscription(atomFeed, subscription)).thenReturn(true);
+        when(atomFeedService.isRecentUpload(atomFeed.getEntry()))
+                .thenThrow(DatatypeConfigurationException.class);
+
+        // Act & Assert
+        var exception = assertThrows(BadRequestException.class, () ->
+                callbackService.createFeedEntry(userId, subscriptionId, payload)
+        );
+        assertEquals(BadRequestErrorCode.DATE_PARSING_ERROR, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFeedEntry_userNotFound_ThrowUserIDNotFound() {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String payload = "testPayload";
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        var exception = assertThrows(NotFoundException.class, () ->
+                callbackService.createFeedEntry(userId, subscriptionId, payload)
+        );
+        assertEquals(NotFoundErrorCode.USER_ID_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFeedEntry_subscriptionNotFound_ThrowSubscriptionNotFound() {
+        // Arrange
+        String userId = "testUser";
+        Long subscriptionId = 1L;
+        String payload = "testPayload";
+        User user = new User();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(subscriptionRepository.findByUserIdAndSubscriptionId(userId, subscriptionId))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        var exception = assertThrows(NotFoundException.class, () ->
+                callbackService.createFeedEntry(userId, subscriptionId, payload)
+        );
+        assertEquals(NotFoundErrorCode.SUBSCRIPTION_ID_NOT_FOUND, exception.getErrorCode());
     }
 
     private YTAtomFeed createTestAtomFeed() throws DatatypeConfigurationException {
@@ -188,6 +312,5 @@ public class CallbackServiceTest {
     private XMLGregorianCalendar calendarValue(String date) throws DatatypeConfigurationException {
         return DatatypeFactory.newInstance().newXMLGregorianCalendar(date);
     }
-
 }
 

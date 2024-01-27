@@ -92,47 +92,49 @@ public class CallbackService implements ICallbackService {
             logger.info("Received Atom Entry:");
             logger.info(String.valueOf(atomEntry));
 
-            if (subscription.isAllUploadActivity() || atomFeedService.isRecentUpload(atomEntry)) {
-                FeedEntry entry = feedEntryMapper.toFeedEntry(atomEntry);
-                entry.setUser(user);
+            try {
+                if (subscription.isAllUploadActivity() || atomFeedService.isRecentUpload(atomEntry)) {
+                    FeedEntry entry = feedEntryMapper.toFeedEntry(atomEntry);
+                    entry.setUser(user);
 
-                // Before saving, get our previous most recent update
-                Optional<FeedEntry> prevMostRecentUpdate = feedEntryRepository
-                        .findMostRecentByUserIdAndVideoId(userId, entry.getVideoId());
+                    // Before saving, get our previous most recent update
+                    Optional<FeedEntry> prevMostRecentUpdate = feedEntryRepository
+                            .findMostRecentByUserIdAndVideoId(userId, entry.getVideoId());
 
-                // Add to the user's feed:
-                feedEntryRepository.save(entry);
-                logger.info("Entry saved.");
+                    // Add to the user's feed:
+                    feedEntryRepository.save(entry);
+                    logger.info("Entry saved.");
 
-                if (prevMostRecentUpdate.isPresent()) {
-                    // We've gotten an update for this video before, check to see if at least 2 minutes
-                    // have elapsed before attempting another notification.
-                    var prevEntry = prevMostRecentUpdate.get();
-                    var duration = Duration.between(prevEntry.getUpdated(), entry.getUpdated());
+                    if (prevMostRecentUpdate.isPresent()) {
+                        // We've gotten an update for this video before, check to see if at least 2 minutes
+                        // have elapsed before attempting another notification.
+                        var prevEntry = prevMostRecentUpdate.get();
+                        var duration = Duration.between(prevEntry.getUpdated(), entry.getUpdated());
 
-                    if (duration.toMinutes() < 2) {
-                        logger.info("Not enough time elapsed since last update, skipping notification: " + duration);
-                        return;
+                        if (duration.toMinutes() < 2) {
+                            logger.info("Not enough time elapsed since last update, skipping notification: " + duration);
+                            return;
+                        }
                     }
+
+                    // Attempt to send a notification:
+                    notificationSettingsRepository.findByUserId(userId).ifPresent(settings -> {
+                        if (settings.isEnableNotifications()) {
+                            var updatedString = prevMostRecentUpdate.isPresent() ? "(Video Updated) " : "";
+                            pushoverService.sendNotification(
+                                    updatedString + atomEntry.getTitle() + "\n" + atomEntry.getLink().getHref(),
+                                    author.getName(),
+                                    settings.getPushoverToken(),
+                                    settings.getPushoverUser()
+                            );
+                        }
+                    });
                 }
-
-                // Attempt to send a notification:
-                notificationSettingsRepository.findByUserId(userId).ifPresent(settings -> {
-                    if (settings.isEnableNotifications()) {
-                        var updatedString = prevMostRecentUpdate.isPresent() ? "(Video Updated) " : "";
-                        pushoverService.sendNotification(
-                                updatedString + atomEntry.getTitle() + "\n" + atomEntry.getLink().getHref(),
-                                author.getName(),
-                                settings.getPushoverToken(),
-                                settings.getPushoverUser()
-                        );
-                    }
-                });
+            } catch (DatatypeConfigurationException e) {
+                throw new BadRequestException(BadRequestErrorCode.DATE_PARSING_ERROR);
             }
         } catch (JAXBException e) {
             throw new BadRequestException(BadRequestErrorCode.FEED_PARSING_ERROR);
-        } catch (DatatypeConfigurationException e) {
-            throw new BadRequestException(BadRequestErrorCode.DATE_PARSING_ERROR);
         }
     }
 }

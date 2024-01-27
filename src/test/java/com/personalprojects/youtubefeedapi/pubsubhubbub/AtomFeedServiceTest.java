@@ -1,9 +1,11 @@
 package com.personalprojects.youtubefeedapi.pubsubhubbub;
 
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.Author;
+import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.Link;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomEntry;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.atomfeed.YTAtomFeed;
 import com.personalprojects.youtubefeedapi.pubsubhubbub.services.AtomFeedService;
+import com.personalprojects.youtubefeedapi.subscription.Subscription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -62,9 +64,47 @@ public class AtomFeedServiceTest {
         var xmlPayload = readTextFile("invalid_notification.xml");
 
         // Act & Assert
-        assertThrows(JAXBException.class, () -> {
-            atomFeedService.toAtomFeed(xmlPayload);
-        });
+        assertThrows(JAXBException.class, () ->
+                atomFeedService.toAtomFeed(xmlPayload)
+        );
+    }
+
+    @Test
+    public void atomFeedAndSubHaveMatchingTopicUrls_whenToAtomFeed_thenReturnTrue() {
+        // Arrange
+        var matchingLink = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=UCq6VFHwMzcMXbuKyG7SQYIg";
+
+        YTAtomFeed atomFeed = new YTAtomFeed();
+        Link selfLink = new Link();
+        selfLink.setHref(matchingLink);
+        atomFeed.setSelfLink(selfLink);
+
+        Subscription subscription = new Subscription();
+        subscription.setTopicUrl(matchingLink);
+
+        // Act
+        var result = atomFeedService.isValidForSubscription(atomFeed, subscription);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    public void atomFeedAndSubHaveMisMatchingTopicUrls_whenToAtomFeed_thenReturnFalse() {
+        // Arrange
+        YTAtomFeed atomFeed = new YTAtomFeed();
+        Link selfLink = new Link();
+        selfLink.setHref("https://www.youtube.com/xml/feeds/videos.xml?channel_id=UCq6VFHwMzcMXbuKyG7SQYIg");
+        atomFeed.setSelfLink(selfLink);
+
+        Subscription subscription = new Subscription();
+        subscription.setTopicUrl("https://www.youtube.com/xml/feeds/videos.xml");
+
+        // Act
+        var result = atomFeedService.isValidForSubscription(atomFeed, subscription);
+
+        // Assert
+        assertFalse(result);
     }
 
     private String readTextFile(String fileName) throws IOException {
