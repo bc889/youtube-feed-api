@@ -117,6 +117,9 @@ public class CallbackService implements ICallbackService {
                         }
                     }
 
+                    // Add to the user's feed:
+                    feedEntryRepository.save(entry);
+
                     // Attempt to send a notification:
                     notificationSettingsRepository.findByUserId(userId).ifPresent(settings -> {
                         if (settings.isEnableNotifications()) {
