@@ -53,5 +53,8 @@ sudo systemctl enable jenkins
 # Start Jenkins as a service:
 sudo systemctl start jenkins
 
-# Check Jenkins Status
-sudo systemctl status jenkins
+## Add some additional swap space to allow micro instances to run builds
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo chmod 600 /var/swap.1
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
