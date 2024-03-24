@@ -10,11 +10,9 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: 0.5
           memory: 300M
     image: youtube-feed-api:latest
-    mem_limit: 300m
-    mem_reservation: 100m
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
@@ -33,6 +31,9 @@ services:
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
       NGROK_DOMAIN: ${NGROK_DOMAIN}
+    mem_limit: 60m
+    mem_reservation: 30m
+    cpus: 0.3
     ports:
       - "4040:4040"  # Ngrok web interface. Access via http://localhost:4040
     command: http --hostname=${NGROK_DOMAIN} youtube-feed-api:${SERVER_PORT}
