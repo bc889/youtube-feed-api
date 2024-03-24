@@ -11,8 +11,10 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 300M
     image: youtube-feed-api:latest
+    mem_limit: 300m
+    mem_reservation: 100m
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
