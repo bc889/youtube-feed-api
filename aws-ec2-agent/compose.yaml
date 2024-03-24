@@ -7,6 +7,11 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     image: youtube-feed-api:latest
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
