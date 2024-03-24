@@ -9,6 +9,9 @@ RUN chmod +x ./gradlew
 RUN gradle wrapper
 RUN ./gradlew dependencies --no-daemon
 
+# Set JVM arguments for Gradle daemon
+ENV GRADLE_OPTS="-Xmx256m -Xms256m"
+
 # Copying only the necessary files to leverage Docker cache
 COPY src /app/src
 RUN ./gradlew build -PusePostgres -x test --no-daemon
