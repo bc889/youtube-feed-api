@@ -17,7 +17,7 @@ sudo service docker start
 sudo usermod -a -G docker ec2-user
 
 # download dockercompose
-curl -L "https://github.com/docker/compose/releases/download/v2.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
 # Apply executable permissions to the docker-compose binary
 sudo chmod +x /usr/local/bin/docker-compose
@@ -54,7 +54,7 @@ sudo systemctl enable jenkins
 sudo systemctl start jenkins
 
 ## Add some additional swap space to allow micro instances to run builds
-sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=2048
 sudo chmod 600 /var/swap.1
 sudo /sbin/mkswap /var/swap.1
 sudo /sbin/swapon /var/swap.1
