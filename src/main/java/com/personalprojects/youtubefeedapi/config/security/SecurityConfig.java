@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,6 +29,9 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(
+                        HeadersConfigurer.FrameOptionsConfig::disable
+                ))
                 .oauth2ResourceServer(AbstractHttpConfigurer::disable)
                 .build();
     }
